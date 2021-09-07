@@ -20,7 +20,7 @@
       overlay = final: prev: with prev; {
         owncast = buildGoModule {
           pname = "owncast";
-          version = self.shortRev or "${nixpkgs.lib.substring 0 8 self.lastModifiedDate}-dev"; # "x.x.x" for releases
+          version = "dirty"; #self.shortRev or "${nixpkgs.lib.substring 0 8 self.lastModifiedDate}-dev"; # "x.x.x" for releases
 
           buildInputs = [ ffmpeg ];
 
@@ -113,7 +113,7 @@
               serviceConfig = rec {
                 User = "owncast";
                 Group = "owncast";
-                WorkingDirectory = "var/lib/owncast";
+                WorkingDirectory = "/var/lib/owncast";
                 #StateDirectory = "owncast";
                 #CacheDirectory = "${StateDirectory}/logs";
                 ExecStart = ''
