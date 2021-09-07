@@ -111,8 +111,6 @@
               wantedBy = [ "multi-user.target" ];
 
               serviceConfig = rec {
-                User = cfg.user;
-                Group = cfg.group;
                 ExecStart = "${cfg.package}/bin/owncast -webserverport ${toString cfg.httpPort} -rtmpport ${toString cfg.rtmpPort} -database /var/lib/owncast/db -streamkey ${cfg.streamkey}";
                 Restart = "on-failure";
 
