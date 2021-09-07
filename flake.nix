@@ -111,7 +111,9 @@
               wantedBy = [ "multi-user.target" ];
 
               serviceConfig = rec {
-                ExecStart = "${cfg.package}/bin/owncast -webserverport ${toString cfg.httpPort} -rtmpport ${toString cfg.rtmpPort} -database /var/lib/owncast/db -streamkey ${cfg.streamkey}";
+                User = "owncast";
+                Group = "owncast";
+                ExecStart = "${cfg.package}/bin/owncast -webserverport ${toString cfg.httpPort} -rtmpport ${toString cfg.rtmpPort} -streamkey ${cfg.streamkey}";
                 Restart = "on-failure";
 
                 # Security options:
@@ -145,6 +147,10 @@
 
             networking.firewall = mkIf cfg.openFirewall {
               allowedTCPPorts = with cfg; [ rtmpPort httpPort ];
+            };
+
+            users.users.owncast = {
+              isSystemUser = true;
             };
           };
         };
