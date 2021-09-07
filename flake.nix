@@ -113,7 +113,7 @@
               serviceConfig = rec {
                 User = cfg.user;
                 Group = cfg.group;
-                ExecStart = "${cfg.package}/bin/owncast -webserverport ${cfg.httpPort} -rtmpport ${cfg.rtmpPort} -database /var/lib/owncast -streamkey ${cfg.streamkey}";
+                ExecStart = "${cfg.package}/bin/owncast -webserverport ${toString cfg.httpPort} -rtmpport ${toString cfg.rtmpPort} -database /var/lib/owncast/db -streamkey ${cfg.streamkey}";
                 Restart = "on-failure";
 
                 # Security options:
