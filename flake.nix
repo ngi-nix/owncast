@@ -95,7 +95,7 @@
               };
 
               streamkey = mkOption {
-                type = types.string;
+                type = types.str;
                 default = "abc123";
                 description = ''
                   Stream key to use.
