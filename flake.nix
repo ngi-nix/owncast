@@ -50,6 +50,7 @@
 
       nixosModules.owncast =
         with nixpkgs.lib;
+        { config, pkgs, ... }:
         let
           cfg = config.services.owncast;
         in
