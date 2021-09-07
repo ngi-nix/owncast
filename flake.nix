@@ -152,6 +152,7 @@
             users.users.owncast = {
               isSystemUser = true;
             };
+            users.groups.owncast = { };
           };
         };
 
