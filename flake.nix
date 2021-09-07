@@ -113,7 +113,16 @@
               serviceConfig = rec {
                 User = "owncast";
                 Group = "owncast";
-                ExecStart = "${cfg.package}/bin/owncast -webserverport ${toString cfg.httpPort} -rtmpport ${toString cfg.rtmpPort} -streamkey ${cfg.streamkey}";
+                StateDirectory = "owncast";
+                CacheDirectory = "${StateDirectory}/logs";
+                ExecStart = ''
+                  ${cfg.package}/bin/owncast \
+                    -webserverport ${toString cfg.httpPort} \
+                    -rtmpport ${toString cfg.rtmpPort} \
+                    -streamkey ${cfg.streamkey} \
+                    -logdir /var/lib/${CacheDirectory} \
+                    -database /var/lib/${StateDirectory}/owncast.db
+                '';
                 Restart = "on-failure";
 
                 # Security options:
@@ -149,10 +158,10 @@
               allowedTCPPorts = with cfg; [ rtmpPort httpPort ];
             };
 
-            users.users.owncast = {
-              isSystemUser = true;
+            users = {
+              users.owncast.isSystemUser = true;
+              groups.owncast = { };
             };
-            users.groups.owncast = { };
           };
         };
 
