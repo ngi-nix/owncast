@@ -113,16 +113,18 @@
               serviceConfig = rec {
                 User = "owncast";
                 Group = "owncast";
-                StateDirectory = "owncast";
-                CacheDirectory = "${StateDirectory}/logs";
+                WorkingDirectory = "var/lib/owncast";
+                #StateDirectory = "owncast";
+                #CacheDirectory = "${StateDirectory}/logs";
                 ExecStart = ''
                   ${cfg.package}/bin/owncast \
                     -webserverport ${toString cfg.httpPort} \
                     -rtmpport ${toString cfg.rtmpPort} \
                     -streamkey ${cfg.streamkey} \
-                    -logdir /var/lib/${CacheDirectory} \
-                    -database /var/lib/${StateDirectory}/owncast.db
                 '';
+                /*    -logdir /var/lib/${CacheDirectory} \
+                    -database /var/lib/${StateDirectory}/owncast.db
+                ''; */
                 Restart = "on-failure";
 
                 # Security options:
