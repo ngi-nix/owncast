@@ -18,25 +18,45 @@
     in
     {
       overlay = final: prev: with prev; {
-        owncast = buildGoModule {
-          pname = "owncast";
-          version = "dirty"; #self.shortRev or "${nixpkgs.lib.substring 0 8 self.lastModifiedDate}-dev"; # "x.x.x" for releases
-
-          buildInputs = [ ffmpeg ];
-
-          src = ./.;
-
-          vendorSha256 = "sha256-jx2dJbG8ebjGkyE5D3jUHkmw/nfjeqM38iwmO+7i6oA=";
-
-          meta = {
-            homepage = "https://owncast.online";
-            description = ''
-              Owncast is a self-hosted live video and web chat server for use
-              with existing popular broadcasting software
+        owncast =
+          let
+            setupScript = ''
+              [ ! -d $(pwd)/static ] && (
+                cp -r ${placeholder "out"}/share/owncast/{static,webroot} $(pwd)
+                chmod -R u+w $(pwd)/{static,webroot}
+              )
             '';
-            license = lib.licenses.mit;
+          in
+          buildGoModule {
+            pname = "owncast";
+            version = "dirty"; #self.shortRev or "${nixpkgs.lib.substring 0 8 self.lastModifiedDate}-dev"; # "x.x.x" for releases
+
+            nativeBuildInputs = [ makeWrapper ];
+
+            src = ./.;
+
+            vendorSha256 = "sha256-jx2dJbG8ebjGkyE5D3jUHkmw/nfjeqM38iwmO+7i6oA=";
+
+            preInstall = ''
+              mkdir -p $out/share/owncast
+              cp -r $src/{static,webroot} $out/share/owncast
+            '';
+
+            postInstall = ''
+              wrapProgram $out/bin/owncast \
+                --run '${setupScript}' \
+                --prefix PATH : ${lib.makeBinPath [ ffmpeg ]}
+            '';
+
+            meta = {
+              homepage = "https://owncast.online";
+              description = ''
+                Owncast is a self-hosted live video and web chat server for use
+                with existing popular broadcasting software
+              '';
+              license = lib.licenses.mit;
+            };
           };
-        };
       };
 
       packages = forAllSystems (system: {
