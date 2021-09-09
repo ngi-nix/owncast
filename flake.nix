@@ -138,13 +138,14 @@
                 #CacheDirectory = "${StateDirectory}/logs";
                 ExecStart = ''
                   ${cfg.package}/bin/owncast \
-                    -webserverport ${toString cfg.httpPort} \
-                    -rtmpport ${toString cfg.rtmpPort} \
-                    -streamkey ${cfg.streamkey} \
+                  -webserverport ${toString cfg.httpPort} \
+                  -rtmpport ${toString cfg.rtmpPort} \
+                  -streamkey ${cfg.streamkey} \
                 '';
                 /*    -logdir /var/lib/${CacheDirectory} \
-                    -database /var/lib/${StateDirectory}/owncast.db
-                ''; */
+                  -database /var/lib/${StateDirectory}/owncast.db
+                  '';
+                */
                 Restart = "on-failure";
 
                 # Security options:
