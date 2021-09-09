@@ -45,7 +45,7 @@
             postInstall = ''
               wrapProgram $out/bin/owncast \
                 --run '${setupScript}' \
-                --prefix PATH : ${lib.makeBinPath [ ffmpeg which ]}
+                --prefix PATH : ${lib.makeBinPath [ bash ffmpeg which ]}
             '';
 
             meta = {
