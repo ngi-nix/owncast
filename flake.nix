@@ -189,5 +189,32 @@
         };
 
       nixosModule = self.nixosModules.owncast;
+
+      checks = forAllSystems (system:
+        with nixpkgsFor.${system};
+        {
+          inherit (self.packages.${system}) owncast;
+
+          # A VM test of the NixOS module.
+          vmTest =
+            with import (nixpkgs + "/nixos/lib/testing-python.nix") { inherit system; };
+
+            makeTest {
+              nodes = {
+                client = { ... }: {
+                  imports = [ self.nixosModules.owncast ];
+                  nixpkgs.config.overlays = [ self.overlay ];
+                  services.owncast.enable = true;
+                };
+              };
+
+              testScript =
+                ''
+                  start_all()
+                  client.wait_for_unit("owncast.service")
+                  client.succeed("echo 'Test Pass!'")
+                '';
+            };
+        });
     };
 }
