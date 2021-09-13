@@ -20,26 +20,38 @@
       overlay = final: prev: with prev; {
         owncast = buildGoModule rec {
           pname = "owncast";
-          version = "0.0.8";
+          version = "dirty";
 
-          src = fetchFromGitHub {
-            owner = "owncast";
-            repo = "owncast";
-            rev = "v${version}";
-            sha256 = "0md4iafa767yxkwh6z8zpcjv9zd79ql2wapx9vzyd973ksvrdaw2";
-          };
+          src = ./.;
 
-          vendorSha256 = "sha256-bH2CWIgpOS974/P98n0R9ebGTJ0YoqPlH8UmxSYNHeM=";
+          vendorSha256 = "sha256-jx2dJbG8ebjGkyE5D3jUHkmw/nfjeqM38iwmO+7i6oA=";
 
           propagatedBuildInputs = [ ffmpeg ];
 
           buildInputs = [ makeWrapper ];
 
-          postInstall = ''
-            wrapProgram $out/bin/owncast --prefix PATH : ${
-              lib.makeBinPath [ bash which ffmpeg ]
-            }
+          preInstall = ''
+            mkdir -p $out
+            cp -r $src/{static,webroot} $out
           '';
+
+          postInstall =
+            let
+              setupScript = ''
+                ([ ! -d $PWD/static ] && [ ! -d $PWD/webroot} ]) && (
+                  cp -r ${placeholder "out"}/webroot $PWD/webroot
+                  ln -s ${placeholder "out"}/static $PWD/static
+                  chmod -R u+w $PWD/webroot
+                )
+              '';
+            in
+            ''
+              wrapProgram $out/bin/owncast \
+                --run '${setupScript}' \
+                --prefix PATH : ${
+                  lib.makeBinPath [ bash which ffmpeg ]
+                }
+            '';
 
           installCheckPhase = ''
             runHook preCheck
@@ -80,14 +92,16 @@
               dataDir = mkOption {
                 type = types.str;
                 default = "/var/lib/owncast";
-                description = "The directory where owncast stores its data files.";
+                description = ''
+                  The directory where owncast stores its data files.
+                '';
               };
 
               openFirewall = mkOption {
                 type = types.bool;
                 default = false;
                 description = ''
-                  Open ports in the firewall for owncast.
+                  Open the appropriate ports in the firewall for owncast.
                 '';
               };
 
@@ -105,9 +119,9 @@
 
               listen = mkOption {
                 type = types.str;
-                default = "0.0.0.0";
-                example = "127.0.0.1";
-                description = "The IP address to bind owncast to.";
+                default = "127.0.0.1";
+                example = "0.0.0.0";
+                description = "The IP address to bind the owncast server to.";
               };
 
               port = mkOption {
@@ -130,21 +144,17 @@
 
             config = mkIf cfg.enable {
 
-              systemd.tmpfiles.rules = [
-                "L+ '${cfg.dataDir}/static' - - - - ${pkgs.owncast.src}/static"
-                "C '${cfg.dataDir}/webroot' 0700 - - - ${pkgs.owncast.src}/webroot"
-              ];
-
               systemd.services.owncast = {
+                description = "A self-hosted live video and web chat server";
                 wantedBy = [ "default.target" ];
 
                 serviceConfig = {
                   User = cfg.user;
                   Group = cfg.group;
                   WorkingDirectory = cfg.dataDir;
-                  StateDirectory = baseNameOf cfg.dataDir;
                   ExecStart = "${pkgs.owncast}/bin/owncast -webserverport ${toString cfg.port} -rtmpport ${toString cfg.rtmp-port} -webserverip ${cfg.listen}";
                   Restart = "on-failure";
+                  StateDirectory = cfg.dataDir;
                 };
 
                 environment = {
@@ -161,10 +171,10 @@
                 };
               };
 
-              users.groups = mkIf (cfg.group == "owncast") { ${cfg.group} = { }; };
+              users.groups = mkIf (cfg.group == "owncast") { owncast = { }; };
 
               networking.firewall =
-                mkIf cfg.openFirewall { allowedTCPPorts = [ cfg.port cfg.rtmp-port ]; };
+                mkIf cfg.openFirewall { allowedTCPPorts = [ cfg.rtmp-port ] ++ optional (cfg.listen != "127.0.0.1") cfg.port; };
 
             };
             meta = { maintainers = with lib.maintainers; [ mayniklas ]; };
@@ -185,8 +195,12 @@
               nodes = {
                 client = { ... }: {
                   imports = [ self.nixosModules.owncast ];
+                  environment.systemPackages = [ curl ];
                   nixpkgs.overlays = [ self.overlay ];
-                  services.owncast.enable = true;
+                  services.owncast = {
+                    enable = true;
+                    port = 8080;
+                  };
                 };
               };
 
@@ -194,7 +208,7 @@
                 ''
                   start_all()
                   client.wait_for_unit("owncast.service")
-                  client.succeed("${curl}/bin/curl 127.0.0.1/api/status")
+                  client.succeed("curl localhost:8080/api/status")
                 '';
             };
         });
