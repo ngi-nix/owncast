@@ -30,7 +30,7 @@
 
           src = ./.;
 
-          vendorSha256 = "sha256-jx2dJbG8ebjGkyE5D3jUHkmw/nfjeqM38iwmO+7i6oA=";
+          vendorSha256 = "sha256-NARHYeOVT7sxfL1BdJc/CPCgHNZzjWE7kACJvrEC71Y=";
 
           propagatedBuildInputs = [ ffmpeg ];
 
